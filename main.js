@@ -6,6 +6,8 @@ class MockupScene extends Phaser.Scene {
         super({ key: 'MockupScene' });
 
         this.shirtParts = { front: {}, back: {} };
+        // TAMBAHAN: Properti untuk menyimpan outline
+        this.shirtOutlines = { front: null, back: null };
         this.artworks = { front: { torso: null, sleeve: null }, back: { torso: null, sleeve: null } };
         this.currentView = 'front';
         this.isEditMode = true;
@@ -37,6 +39,10 @@ class MockupScene extends Phaser.Scene {
         this.load.image('shirt-front-sleeve', 'ImageAssets/Front/shirt-front-sleeve.png');
         this.load.image('shirt-back-torso', 'ImageAssets/Back/shirt-back-torso.png');
         this.load.image('shirt-back-sleeve', 'ImageAssets/Back/shirt-back-sleeve.png');
+
+        // TAMBAHAN: Preload gambar outline
+        this.load.image('shirt-front-outline', 'ImageAssets/Front/shirt-front-outline.png');
+        this.load.image('shirt-back-outline', 'ImageAssets/Back/shirt-back-outline.png');
     }
 
     create() {
@@ -54,6 +60,19 @@ class MockupScene extends Phaser.Scene {
         this.shirtParts.back.torso = this.add.sprite(0, 0, 'shirt-back-torso').setOrigin(0.5);
         this.shirtParts.back.sleeve = this.add.sprite(0, 0, 'shirt-back-sleeve').setOrigin(0.5);
         this.backContainer.add([this.shirtParts.back.torso, this.shirtParts.back.sleeve]);
+
+        // --- TAMBAHAN: Create Shirt Outlines ---
+        this.shirtOutlines.front = this.add.sprite(0, 0, 'shirt-front-outline').setOrigin(0.5);
+        this.shirtOutlines.back = this.add.sprite(0, 0, 'shirt-back-outline').setOrigin(0.5);
+
+        // Non-aktifkan interaksi agar tidak menghalangi input mouse/touch
+        this.shirtOutlines.front.disableInteractive();
+        this.shirtOutlines.back.disableInteractive();
+
+        // Tambahkan ke container masing-masing
+        this.frontContainer.add(this.shirtOutlines.front);
+        this.backContainer.add(this.shirtOutlines.back);
+
 
         this.setupUIListeners();
         this.setupCameraControls();
@@ -215,6 +234,9 @@ class MockupScene extends Phaser.Scene {
         const container = this.currentView === 'front' ? this.frontContainer : this.backContainer;
         container.add(art);
 
+        // TAMBAHAN: Pastikan outline selalu di atas art, tapi di bawah transform controls
+        container.bringToTop(this.shirtOutlines[this.currentView]);
+
         art.on('pointerdown', (pointer) => {
             if (this.isEditMode && pointer.button === 0) {
                 this.selectArt(art);
@@ -257,6 +279,7 @@ class MockupScene extends Phaser.Scene {
         
         const container = this.currentView === 'front' ? this.frontContainer : this.backContainer;
         container.add(this.transformControls);
+        // Pastikan controls selalu di paling atas
         container.bringToTop(this.transformControls);
         
         this.updateTransformControls();
